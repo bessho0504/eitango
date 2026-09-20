@@ -701,7 +701,7 @@
       </div>
 
       <div class="btn-group">
-        <button class="btn btn-secondary" onclick="showScreen('wordlist')">単語リストを管理</button>
+        <button class="btn btn-secondary" onclick="showScreen('wordlist')">単語の管理/追加</button>
       </div>
     </div>
 
@@ -782,7 +782,7 @@
     <!-- WORD LIST SCREEN -->
     <div id="wordlist" class="screen">
       <header>
-        <h1>単語リスト <span class="badge" id="listCount">0</span></h1>
+        <h1>単語の管理/追加 <span class="badge" id="listCount">0</span></h1>
       </header>
       <div class="memo-controls" style="margin-bottom:8px;">
         <button class="btn btn-secondary" id="wordListAccBtn" onclick="toggleWordListAcc()">正答率 表示/非表示</button>
@@ -1244,7 +1244,7 @@
       updateWordListControlSelected();
 
       if (words.length === 0) {
-        container.innerHTML = '<div class="empty-state">単語がありません<br>編集モードで「＋ 追加」から登録してください</div>';
+        container.innerHTML = '<div class="empty-state">単語がありません<br>「単語を追加」から登録してください</div>';
         return;
       }
 
