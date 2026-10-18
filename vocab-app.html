@@ -642,7 +642,7 @@
     <div id="home" class="screen active">
       <header>
         <h1>英単語暗記</h1>
-        <p>四択・タイピング・単語暗記</p>
+        <p>英単語・重要表現 / 四択・タイピング・暗記</p>
       </header>
 
       <div class="card">
@@ -657,6 +657,12 @@
           </div>
         </div>
         <p class="stats-hint">※ タップで確認できます</p>
+      </div>
+
+      <div class="section-label">出題内容</div>
+      <div class="direction-toggle" id="contentKindToggle">
+        <button class="active" data-kind="word" onclick="setContentKind('word')">英単語</button>
+        <button data-kind="phrase" onclick="setContentKind('phrase')">重要表現</button>
       </div>
 
       <div class="section-label">出題方向</div>
@@ -695,13 +701,13 @@
         </div>
         <div class="mode-btn full" onclick="startMemo()">
           <div class="icon">📋</div>
-          <div class="label">単語暗記</div>
-          <div class="desc">全部並べてタップで日英切り替え</div>
+          <div class="label">暗記リスト</div>
+          <div class="desc">英単語/重要表現を並べてタップ切替</div>
         </div>
       </div>
 
       <div class="btn-group">
-        <button class="btn btn-secondary" onclick="showScreen('wordlist')">単語の管理/追加</button>
+        <button class="btn btn-secondary" onclick="showScreen('wordlist')">管理/追加</button>
       </div>
     </div>
 
@@ -740,7 +746,11 @@
     <!-- MEMO / 単語暗記 SCREEN -->
     <div id="memo" class="screen">
       <div class="memo-header">
-        <div class="title">単語暗記 <span class="badge" id="memoCount">0</span></div>
+        <div class="title">暗記リスト <span class="badge" id="memoCount">0</span></div>
+      </div>
+      <div class="direction-toggle" id="memoKindToggle" style="margin-bottom:12px;">
+        <button class="active" data-kind="word" onclick="setMemoContentKind('word')">英単語</button>
+        <button data-kind="phrase" onclick="setMemoContentKind('phrase')">重要表現</button>
       </div>
 
       <div class="memo-controls" style="margin-bottom:8px;">
@@ -756,7 +766,6 @@
       <div class="memo-controls" style="margin-bottom:12px;">
         <button class="btn btn-secondary" id="memoSortNew" onclick="sortMemo('new')">新しい順</button>
         <button class="btn btn-secondary" id="memoSortOld" onclick="sortMemo('old')">古い順</button>
-        <button class="btn btn-secondary" id="memoFilterEnabled" onclick="toggleMemoEnabledOnly()">出題単語</button>
       </div>
 
       <div class="memo-list" id="memoList"></div>
@@ -782,11 +791,15 @@
     <!-- WORD LIST SCREEN -->
     <div id="wordlist" class="screen">
       <header>
-        <h1>単語の管理/追加 <span class="badge" id="listCount">0</span></h1>
+        <h1 id="wordListTitle">単語の管理/追加 <span class="badge" id="listCount">0</span></h1>
       </header>
+      <div class="direction-toggle" id="wordListKindToggle" style="margin-bottom:12px;">
+        <button class="active" data-kind="word" onclick="setWordListKind('word')">英単語</button>
+        <button data-kind="phrase" onclick="setWordListKind('phrase')">重要表現</button>
+      </div>
       <div class="memo-controls" style="margin-bottom:8px;">
         <button class="btn btn-secondary" id="wordListAccBtn" onclick="toggleWordListAcc()">正答率 表示/非表示</button>
-        <button class="btn btn-primary" id="wordListAddBtn" onclick="openAddWord()">単語を追加</button>
+        <button class="btn btn-primary" id="wordListAddBtn" onclick="openAddWord()">追加</button>
         <button class="btn btn-outline" id="wordListEditBtn" onclick="toggleWordListEdit()">編集</button>
       </div>
       <div class="memo-controls" style="margin-bottom:8px;">
@@ -810,11 +823,11 @@
       </header>
       <div class="card">
         <div class="form-group">
-          <label>英単語</label>
+          <label id="labelEn">英語</label>
           <input type="text" id="inputEn" placeholder="例: earthquake" autocomplete="off">
         </div>
         <div class="form-group">
-          <label>日本語の意味</label>
+          <label id="labelJa">日本語</label>
           <input type="text" id="inputJa" placeholder="例: 地震" autocomplete="off">
         </div>
       </div>
@@ -827,7 +840,133 @@
 
   <script>
     // ========== 初期単語データ ==========
-        const DEFAULT_WORDS = []; // 配布用：初期単語なし（端末に保存済みならそのまま残る）
+        const DEFAULT_WORDS = [
+      { en: 'print', ja: '…を印刷する', pos: '動', kind: 'word' },
+      { en: 'born', ja: 'be born 生まれる', pos: '動', kind: 'word' },
+      { en: 'internet', ja: 'インターネット', pos: '名', kind: 'word' },
+      { en: 'person', ja: '人、個人', pos: '名', kind: 'word' },
+      { en: 'image', ja: '像、肖像、印象', pos: '名', kind: 'word' },
+      { en: 'leader', ja: '指導者、リーダー', pos: '名', kind: 'word' },
+      { en: 'non-violence', ja: '非暴力', pos: '名', kind: 'word' },
+      { en: 'national', ja: '国の', pos: '形', kind: 'word' },
+      { en: 'greatly', ja: 'おおいに、非常に', pos: '副', kind: 'word' },
+      { en: 'fight', ja: 'たたかう', pos: '動', kind: 'word' },
+      { en: 'protest', ja: '抗議する', pos: '動', kind: 'word' },
+      { en: 'independence', ja: '独立', pos: '名', kind: 'word' },
+      { en: 'violence', ja: '暴力', pos: '名', kind: 'word' },
+      { en: 'tough', ja: '困難な、難しい', pos: '形', kind: 'word' },
+      { en: 'fast', ja: '断食', pos: '名', kind: 'word' },
+      { en: 'accept', ja: '…を受け入れる', pos: '動', kind: 'word' },
+      { en: 'stood', ja: 'standの過去形', pos: '動', kind: 'word' },
+      { en: 'arrest', ja: '…を逮捕する', pos: '動', kind: 'word' },
+      { en: 'lawyer', ja: '弁護士', pos: '名', kind: 'word' },
+      { en: 'discrimination', ja: '差別', pos: '名', kind: 'word' },
+      { en: 'sidewalk', ja: '歩道', pos: '名', kind: 'word' },
+      { en: 'law', ja: '法律、法', pos: '名', kind: 'word' },
+      { en: 'jail', ja: '刑務所', pos: '名', kind: 'word' },
+      { en: 'British', ja: 'イギリス[英国]の、イギリス人の、イギリス[英国]人', pos: '形/名', kind: 'word' },
+      { en: 'unfair', ja: '不公平な、不当な', pos: '形', kind: 'word' },
+      { en: 'non-violent', ja: '非暴力の', pos: '形', kind: 'word' },
+      { en: 'effective', ja: '効果的な', pos: '形', kind: 'word' },
+      { en: 'freely', ja: '自由に', pos: '副', kind: 'word' },
+      { en: 'produce', ja: '…を生産する、生じる', pos: '動', kind: 'word' },
+      { en: 'colony', ja: '植民地', pos: '名', kind: 'word' },
+      { en: 'tax', ja: '税、税金', pos: '名', kind: 'word' },
+      { en: 'follower', ja: '信奉者、支持者', pos: '名', kind: 'word' },
+      { en: 'thousand', ja: '1,000(の)', pos: '名/形', kind: 'word' },
+      { en: 'kilometer', ja: 'キロメートル', pos: '名', kind: 'word' },
+      { en: 'march', ja: '行進、マーチ', pos: '名', kind: 'word' },
+      { en: 'legacy', ja: '遺産', pos: '名', kind: 'word' },
+      { en: 'expensive', ja: '高価な、費用のかかる', pos: '形', kind: 'word' },
+      { en: 'peaceful', ja: '平和な', pos: '形', kind: 'word' },
+      { en: 'text', ja: '携帯電話などでメッセージをおくる', pos: '動', kind: 'word' },
+      { en: 'ban', ja: '…を禁止する', pos: '動', kind: 'word' },
+      { en: 'cross', ja: '…を横切る、渡る', pos: '動', kind: 'word' },
+      { en: 'device', ja: '装置', pos: '名', kind: 'word' },
+      { en: 'decision', ja: '決定、結論', pos: '名', kind: 'word' },
+      { en: 'bother', ja: '面倒', pos: '名', kind: 'word' },
+      { en: 'electronic', ja: '電子的な', pos: '形', kind: 'word' },
+      { en: 'common', ja: 'ふつうの、よくある、共通の', pos: '形', kind: 'word' },
+      { en: 'report', ja: '報告、レポート', pos: '名', kind: 'word' },
+      { en: 'position', ja: '位置、ポジション', pos: '名', kind: 'word' },
+      { en: 'setter', ja: '（バレーボールの）セッター', pos: '名', kind: 'word' },
+      { en: 'chance', ja: '機会、チャンス', pos: '名', kind: 'word' },
+      { en: 'spiker', ja: '（バレーボールの）スパイカー', pos: '名', kind: 'word' },
+      { en: 'teammate', ja: 'チームの仲間、チームメイト', pos: '名', kind: 'word' },
+      { en: 'content', ja: '中身、内容', pos: '名', kind: 'word' },
+      { en: 'thought', ja: '考え、意見', pos: '名', kind: 'word' },
+      { en: 'donate', ja: '…を寄付する', pos: '動', kind: 'word' },
+      { en: 'backpack', ja: 'バックパック', pos: '名', kind: 'word' },
+      { en: 'supply', ja: '必需品（suppliesで）', pos: '名', kind: 'word' },
+      { en: 'unused', ja: '未使用の', pos: '形', kind: 'word' },
+      { en: 'overseas', ja: '外国へ[で]、海外へ[で]', pos: '副', kind: 'word' },
+      { en: 'abroad', ja: '外国に[へ、で]、海外に[へ、で]', pos: '副', kind: 'word' },
+      { en: 'Afghanistan', ja: 'アフガニスタン', pos: '名', kind: 'word' },
+      { en: 'definitely', ja: 'もちろん、確かに', pos: '副', kind: 'word' },
+      { en: 'imagine', ja: '…を想像する', pos: '動', kind: 'word' },
+      { en: 'connect', ja: '…を結びつける、つなぐ', pos: '動', kind: 'word' },
+      { en: 'son', ja: '息子', pos: '名', kind: 'word' },
+      { en: 'daughter', ja: '娘', pos: '名', kind: 'word' },
+      { en: 'air', ja: '空気、空中', pos: '名', kind: 'word' },
+      { en: 'service', ja: 'サービス、公的事業', pos: '名', kind: 'word' },
+      { en: 'globe', ja: '地球（the globeで）', pos: '名', kind: 'word' },
+      { en: 'border', ja: '国境', pos: '名', kind: 'word' },
+      { en: 'illiterate', ja: '読み書きのできない', pos: '形', kind: 'word' },
+      { en: 'ready', ja: '用意ができて', pos: '形', kind: 'word' },
+      { en: 'depend', ja: '頼る', pos: '動', kind: 'word' },
+      { en: 'import', ja: '…を輸入する', pos: '動', kind: 'word' },
+      { en: 'sold', ja: 'sellの過去分詞', pos: '動', kind: 'word' },
+      { en: 'surround', ja: '…を囲む', pos: '動', kind: 'word' },
+      { en: 'trade', ja: '貿易', pos: '名', kind: 'word' },
+      { en: 'survival', ja: '存続、生き残ること', pos: '名', kind: 'word' },
+      { en: 'Brazil', ja: 'ブラジル', pos: '名', kind: 'word' },
+      { en: 'Thailand', ja: 'タイ', pos: '名', kind: 'word' },
+      { en: 'coat', ja: '上着、コート', pos: '名', kind: 'word' },
+      { en: 'fact', ja: '現実、事実', pos: '名', kind: 'word' },
+      { en: 'exception', ja: '例外', pos: '名', kind: 'word' },
+      { en: 'relationship', ja: '関係、結びつき', pos: '名', kind: 'word' },
+      { en: 'Asian', ja: 'アジア（人）の', pos: '形', kind: 'word' },
+      { en: 'daily', ja: '日常の', pos: '形', kind: 'word' },
+      { en: 'interdependent', ja: '相互に依存している', pos: '形', kind: 'word' },
+      { en: 'quite', ja: 'かなり、相当', pos: '副', kind: 'word' },
+      { en: 'beyond', ja: '…をこえたところに[へ]', pos: '前', kind: 'word' },
+      { en: 'disagree', ja: '意見が合わない', pos: '動', kind: 'word' },
+      { en: 'seem', ja: '…のように見える、思われる', pos: '動', kind: 'word' },
+      { en: 'announce', ja: '…を発表する', pos: '動', kind: 'word' },
+      { en: 'mini debate', ja: 'ミニディベート', pos: '名', kind: 'word' },
+      { en: 'judge', ja: '審判員', pos: '名', kind: 'word' },
+      { en: 'variety', ja: 'さまざまな～、いろいろな～（a variety of）', pos: '名', kind: 'word' },
+      { en: 'countryside', ja: 'いなか', pos: '名', kind: 'word' },
+      { en: 'winner', ja: '勝者', pos: '名', kind: 'word' },
+      { en: 'debate', ja: '討論、ディベート', pos: '名', kind: 'word' },
+      { en: 'amazing', ja: '驚くべき', pos: '形', kind: 'word' },
+      { en: 'move', ja: '感動させる', pos: '動', kind: 'word' },
+      { en: 'point', ja: '特徴', pos: '名', kind: 'word' },
+      { en: 'on the internet', ja: 'インターネットで', kind: 'phrase' },
+      { en: 'human rights', ja: '人権', kind: 'phrase' },
+      { en: 'go on', ja: '…をする、始める', kind: 'phrase' },
+      { en: 'at that time', ja: 'その当時(には)', kind: 'phrase' },
+      { en: 'go out', ja: '外へ出る', kind: 'phrase' },
+      { en: 'even if', ja: 'たとえ…だとしても', kind: 'phrase' },
+      { en: 'in those days', ja: 'そのころは、当時は', kind: 'phrase' },
+      { en: 'thousands of', ja: '何千もの、多くの', kind: 'phrase' },
+      { en: 'way to', ja: '…する方法', kind: 'phrase' },
+      { en: 'get the most out of', ja: '…を最大限に生かす', kind: 'phrase' },
+      { en: 'this way', ja: 'このように', kind: 'phrase' },
+      { en: 'so far', ja: '今まで(は)、これまで(は)', kind: 'phrase' },
+      { en: 'encourage ... to ～', ja: '…にするよう促す', kind: 'phrase' },
+      { en: 'most of', ja: '…の大部分、ほとんど（most of + 名詞）', kind: 'phrase' },
+      { en: 'be ready for', ja: '…の用意ができている', kind: 'phrase' },
+      { en: 'in the open air', ja: '屋外で', kind: 'phrase' },
+      { en: 'depend on', ja: '…に頼る', kind: 'phrase' },
+      { en: 'in fact', ja: '実際に、事実上', kind: 'phrase' },
+      { en: 'the United States', ja: 'アメリカ合衆国', kind: 'phrase' },
+      { en: 'we\'ll', ja: 'we willの短縮形', kind: 'phrase' },
+      { en: 'for one thing', ja: '1つには（理由を述べるとき）', kind: 'phrase' },
+      { en: 'eat out', ja: '外食する', kind: 'phrase' },
+      { en: 'not ... at all', ja: '少しも…ない', kind: 'phrase' },
+      { en: 'move on', ja: '（次の課題などへ）移る、進む', kind: 'phrase' }
+    ]; // 配布用：初期単語なし（端末に保存済みならそのまま残る）
 
     // 追加で認める意味・ほぼ同義語（英→日用）
     const ALT_MEANINGS = {
@@ -917,6 +1056,8 @@
     let words = [];
     let quizMode = 'choice';
     let direction = 'en2ja';
+    let contentKind = 'word'; // 'word' | 'phrase'  クイズ・暗記の対象
+    let wordListKind = 'word'; // 管理画面の表示対象
     let quizCount = 20; // number or 'all'
     let quizQueue = [];
     let currentIndex = 0;
@@ -1047,8 +1188,10 @@
       loadStats();
       loadDirection();
       loadQuizCount();
+      try { loadContentKind(); } catch (e) { console.warn(e); }
       updateHomeStats();
-      renderWordList();
+      try { updateWordListKindUI(); } catch (e) { console.warn(e); }
+      try { renderWordList(); } catch (e) { console.warn(e); }
       updateDirectionUI();
       updateQuizCountUI();
       // ボタン全体にクリック音を付ける（発音ボタンは除外）
@@ -1065,32 +1208,35 @@
     }
 
     function loadWords() {
-      const saved = localStorage.getItem('vocab_words_v2');
+      // v5: 空データ混入対策 + 品詞付きUnit
+      const saved = localStorage.getItem('vocab_words_v5');
       if (saved) {
-        words = JSON.parse(saved);
-        // 既存データもヒント付きに更新
+        try { words = JSON.parse(saved) || []; } catch (e) { words = []; }
         words.forEach(w => {
-          if (w.en === 'ordinary' && w.ja === 'ふつうの') w.ja = 'ふつうの（o）';
-          if (w.en === 'common' && w.ja === 'ふつうの') w.ja = 'ふつうの（c）';
+          if (!w.kind) w.kind = 'word';
+          if (w.enabled === undefined) w.enabled = true;
         });
       } else {
-        const old = localStorage.getItem('vocab_words');
-        if (old) {
-          words = JSON.parse(old).map(w => ({
-            ...w,
-            shown: w.shown || 0,
-            correct: w.correct || 0
-          }));
-        } else {
-          // 初回・未保存端末は空の単語リストから開始
-          words = [];
-        }
+        words = [];
+      }
+      // 空なら初期単語を入れる（前バージョンで空保存された端末向け）
+      if (!words.length && DEFAULT_WORDS.length) {
+        words = DEFAULT_WORDS.map((w, i) => ({
+          en: w.en,
+          ja: w.ja,
+          pos: w.pos || '',
+          kind: w.kind || 'word',
+          id: Date.now() + i,
+          shown: 0,
+          correct: 0,
+          enabled: true
+        }));
         saveWords();
       }
     }
 
     function saveWords() {
-      localStorage.setItem('vocab_words_v2', JSON.stringify(words));
+      localStorage.setItem('vocab_words_v5', JSON.stringify(words));
       updateHomeStats();
       renderWordList();
     }
@@ -1125,17 +1271,115 @@
       localStorage.setItem('vocab_direction', direction);
     }
 
+
+    function itemKind(w) {
+      return w.kind === 'phrase' ? 'phrase' : 'word';
+    }
+
+    function wordsOfKind(kind) {
+      return words.filter(w => itemKind(w) === kind);
+    }
+
+    function activeOfKind(kind) {
+      return words.filter(w => itemKind(w) === kind && w.enabled !== false);
+    }
+
+    function kindLabel(kind) {
+      return kind === 'phrase' ? '重要表現' : '英単語';
+    }
+
+    function formatEn(w) {
+      if (!w) return '';
+      if (w.pos) return w.en + '（' + w.pos + '）';
+      return w.en;
+    }
+
+
+    function setContentKind(kind) {
+      contentKind = kind === 'phrase' ? 'phrase' : 'word';
+      localStorage.setItem('vocab_content_kind', contentKind);
+      updateContentKindUI();
+      updateHomeStats();
+    }
+
+    function updateMemoKindUI() {
+      document.querySelectorAll('#memoKindToggle button').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.kind === contentKind);
+      });
+    }
+
+    function setMemoContentKind(kind) {
+      contentKind = kind === 'phrase' ? 'phrase' : 'word';
+      localStorage.setItem('vocab_content_kind', contentKind);
+      updateContentKindUI();
+      updateMemoKindUI();
+      memoTitleMode = 'all';
+      memoEnabledOnly = false;
+      const list = wordsOfKind(contentKind);
+      memoOrder = list.map(w => w.id);
+      memoFlipped = {};
+      memoOrder.forEach(id => { memoFlipped[id] = (direction === 'ja2en'); });
+      const titleEl = document.querySelector('#memo .memo-header .title');
+      if (titleEl) {
+        titleEl.innerHTML = kindLabel(contentKind) + '暗記 <span class="badge" id="memoCount">0</span>';
+      }
+      // sort buttons reset
+      ['memoSortHigh', 'memoSortLow', 'memoSortNew', 'memoSortOld', 'memoShuffle'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('selected');
+      });
+      renderMemoList();
+      updateHomeStats();
+    }
+
+    function loadContentKind() {
+      const s = localStorage.getItem('vocab_content_kind');
+      if (s === 'phrase' || s === 'word') contentKind = s;
+      updateContentKindUI();
+    }
+
+    function updateContentKindUI() {
+      document.querySelectorAll('#contentKindToggle button').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.kind === contentKind);
+      });
+      if (typeof updateMemoKindUI === 'function') updateMemoKindUI();
+    }
+
+    function setWordListKind(kind) {
+      wordListKind = kind === 'phrase' ? 'phrase' : 'word';
+      updateWordListKindUI();
+      renderWordList();
+    }
+
+    function updateWordListKindUI() {
+      document.querySelectorAll('#wordListKindToggle button').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.kind === wordListKind);
+      });
+      const title = document.getElementById('wordListTitle');
+      if (title) {
+        title.innerHTML = kindLabel(wordListKind) + 'の管理/追加 <span class="badge" id="listCount">0</span>';
+      }
+      const addBtn = document.getElementById('wordListAddBtn');
+      if (addBtn) addBtn.textContent = kindLabel(wordListKind) + 'を追加';
+    }
+
     function isWeakWord(w) {
       if (!w.shown || w.shown === 0) return false;
       return (w.correct / w.shown) < 0.6;
     }
 
     function updateHomeStats() {
-      document.getElementById('totalWords').textContent = words.length;
-      const weak = words.filter(isWeakWord);
+      const ofKind = wordsOfKind(contentKind);
+      const totalEl = document.getElementById('totalWords');
+      if (totalEl) totalEl.textContent = ofKind.length;
+      const statLabels = document.querySelectorAll('.stat-item .label');
+      if (statLabels[0]) statLabels[0].textContent = contentKind === 'phrase' ? '登録表現' : '登録単語';
+      if (statLabels[1]) statLabels[1].textContent = contentKind === 'phrase' ? '苦手表現' : '苦手単語';
+      const weak = ofKind.filter(isWeakWord);
       const weakEl = document.getElementById('weakCount');
       if (weakEl) weakEl.textContent = weak.length;
-      document.getElementById('listCount').textContent = words.length;
+      const listCount = document.getElementById('listCount');
+      if (listCount) listCount.textContent = wordsOfKind(wordListKind).length;
     }
 
     function updateDirectionUI() {
@@ -1150,6 +1394,7 @@
       document.getElementById(name).classList.add('active');
 
       if (name === 'wordlist') {
+        updateWordListKindUI();
         renderWordList();
       }
     }
@@ -1157,7 +1402,12 @@
     // 新規追加用（編集とは分ける）
     function openAddWord() {
       editingId = null;
-      document.getElementById('formTitle').textContent = '単語を追加';
+      const name = kindLabel(wordListKind);
+      document.getElementById('formTitle').textContent = name + 'を追加';
+      document.getElementById('labelEn').textContent = wordListKind === 'phrase' ? '英語の表現' : '英単語';
+      document.getElementById('labelJa').textContent = '日本語の意味';
+      document.getElementById('inputEn').placeholder = wordListKind === 'phrase' ? '例: for example' : '例: earthquake';
+      document.getElementById('inputJa').placeholder = wordListKind === 'phrase' ? '例: 例えば' : '例: 地震';
       document.getElementById('inputEn').value = '';
       document.getElementById('inputJa').value = '';
       showScreen('addword');
@@ -1243,12 +1493,18 @@
       const container = document.getElementById('wordListContainer');
       updateWordListControlSelected();
 
-      if (words.length === 0) {
-        container.innerHTML = '<div class="empty-state">単語がありません<br>「単語を追加」から登録してください</div>';
+      updateWordListKindUI();
+      const list = wordsOfKind(wordListKind);
+      const listCount = document.getElementById('listCount');
+      if (listCount) listCount.textContent = list.length;
+
+      if (list.length === 0) {
+        const name = kindLabel(wordListKind);
+        container.innerHTML = '<div class="empty-state">' + name + 'がありません<br>「' + name + 'を追加」から登録してください</div>';
         return;
       }
 
-      const sorted = [...words].sort((a, b) => {
+      const sorted = [...list].sort((a, b) => {
         const accA = a.shown ? (a.correct / a.shown) : -1;
         const accB = b.shown ? (b.correct / b.shown) : -1;
         if (wordListSort === 'high') return accB - accA;
@@ -1274,7 +1530,7 @@
               accHtml = '<div class="acc ' + cls + '">正答率 ' + acc + '%（' + w.correct + '/' + w.shown + '）</div>';
             }
           }
-          return '<div class="word-item"><div><div class="en">' + escapeHtml(w.en) + '</div><div class="ja">' + escapeHtml(w.ja) + '</div>' + accHtml + '</div><div class="actions"><button class="icon-btn" onclick="speak(\'' + escapeAttr(w.en) + '\')" title="発音">🔊</button></div></div>';
+          return '<div class="word-item"><div><div class="en">' + escapeHtml(formatEn(w)) + '</div><div class="ja">' + escapeHtml(w.ja) + '</div>' + accHtml + '</div><div class="actions"><button class="icon-btn" onclick="speak(\'' + escapeAttr(w.en) + '\')" title="発音">🔊</button></div></div>';
         }
 
         // 編集モード：出題ON/OFF・編集・削除（＋任意で正答率）
@@ -1289,7 +1545,7 @@
             accHtml = '<div class="acc ' + cls + '">正答率 ' + acc + '%（' + w.correct + '/' + w.shown + '）</div>';
           }
         }
-        return '<div class="word-item"' + enCls + '><div><div class="en">' + escapeHtml(w.en) + '</div><div class="ja">' + escapeHtml(w.ja) + '</div>' + accHtml + '<div class="acc">' + onOff + '</div></div><div class="actions"><button class="icon-btn" onclick="toggleWordEnabled(' + w.id + ')" title="クイズに出す">' + (enabled ? '✅' : '⬜') + '</button><button class="icon-btn" onclick="editWord(' + w.id + ')" title="意味・スペルを修正">✏️</button><button class="icon-btn" onclick="deleteWord(' + w.id + ')" title="削除">🗑️</button></div></div>';
+        return '<div class="word-item"' + enCls + '><div><div class="en">' + escapeHtml(formatEn(w)) + '</div><div class="ja">' + escapeHtml(w.ja) + '</div>' + accHtml + '<div class="acc">' + onOff + '</div></div><div class="actions"><button class="icon-btn" onclick="toggleWordEnabled(' + w.id + ')" title="クイズに出す">' + (enabled ? '✅' : '⬜') + '</button><button class="icon-btn" onclick="editWord(' + w.id + ')" title="意味・スペルを修正">✏️</button><button class="icon-btn" onclick="deleteWord(' + w.id + ')" title="削除">🗑️</button></div></div>';
       }).join('');
     }
 
@@ -1356,7 +1612,7 @@
         }
         wordListEditMode = true;
       } else {
-        words.push({ id: Date.now(), en, ja, shown: 0, correct: 0, enabled: true });
+        words.push({ id: Date.now(), en, ja, kind: wordListKind, shown: 0, correct: 0, enabled: true });
       }
       saveWords();
       editingId = null;
@@ -1375,7 +1631,9 @@
         return;
       }
       editingId = w.id;
-      document.getElementById('formTitle').textContent = '単語を編集';
+      document.getElementById('formTitle').textContent = kindLabel(itemKind(w)) + 'を編集';
+      document.getElementById('labelEn').textContent = itemKind(w) === 'phrase' ? '英語の表現' : '英単語';
+      wordListKind = itemKind(w);
       document.getElementById('inputEn').value = w.en;
       document.getElementById('inputJa').value = w.ja;
       showScreen('addword');
@@ -1393,7 +1651,7 @@
 
     // ========== Weighted Quiz Queue ==========
     function buildWeightedQueue() {
-      const active = words.filter(w => w.enabled !== false);
+      const active = activeOfKind(contentKind);
       const items = active.map(w => {
         let weight = 1;
         if (w.shown === 0) {
@@ -1425,13 +1683,14 @@
 
     // ========== Quiz ==========
     function startQuiz(mode) {
-      const active = words.filter(w => w.enabled !== false);
+      const active = activeOfKind(contentKind);
+      const name = kindLabel(contentKind);
       if (active.length < 4 && mode === 'choice') {
-        alert('四択クイズには出題ONの単語が最低4つ必要です。');
+        alert('四択クイズには出題ONの' + name + 'が最低4つ必要です。');
         return;
       }
       if (active.length === 0) {
-        alert('出題できる単語がありません。単語リストで出題ONにしてください。');
+        alert('出題できる' + name + 'がありません。管理画面で追加・出題ONにしてください。');
         return;
       }
 
@@ -1468,7 +1727,7 @@
       document.getElementById('dontKnowBtn').style.display = 'block';
 
       const showEn = direction === 'en2ja';
-      document.getElementById('questionWord').textContent = showEn ? q.en : q.ja;
+      document.getElementById('questionWord').textContent = showEn ? formatEn(q) : q.ja;
       document.getElementById('questionHint').textContent = showEn ? '日本語の意味は？' : '英単語は？';
 
       // 日→英のときは答えがバレるので発音ボタンを隠す
@@ -1545,7 +1804,7 @@
 
       q.shown = (q.shown || 0) + 1;
 
-      // 判定をかなり緩くする（ひらがな・カタカナ同一視 + 複数意味）
+      // 判定をかなり緩くする（ひらがな・カタカナ同一視 + ～を/する 等を無視）
       function toHiragana(s) {
         return String(s).replace(/[\u30A1-\u30F6]/g, ch =>
           String.fromCharCode(ch.charCodeAt(0) - 0x60)
@@ -1553,15 +1812,28 @@
       }
 
       function normalize(s) {
-        return toHiragana(String(s))
+        let t = toHiragana(String(s))
           .toLowerCase()
           .replace(/[\s　]/g, '')
-          .replace(/[・\/／\(\)（）\[\]【】「」『』]/g, '')
-          .replace(/[～〜~]/g, '')
-          .replace(/[ー−–—]/g, '')
-          .replace(/(する|される|される|な$|の$|を$|に$|が$|は$|で$|と$|へ$|や$|的$)/g, '')
-          .replace(/(こと|もの|とき|時|場合)/g, '')
-          .replace(/[ぁぃぅぇぉっゃゅょゎ]/g, ''); // 小書きは大書き扱いの簡易版は省略、除去で近似
+          .replace(/[…\.\．]/g, '')
+          .replace(/[・･\/／\,\，、]/g, '')
+          .replace(/[\(\)（）\[\]【】「」『』〈〉《》]/g, '')
+          .replace(/[～〜~\-ー−–—]/g, '')
+          .replace(/[ぁぃぅぇぉっゃゅょゎ]/g, '');
+
+        // 助詞・動詞語尾などを繰り返し除去（「～を印刷する」→「印刷」）
+        for (let i = 0; i < 4; i++) {
+          const before = t;
+          t = t
+            .replace(/^(を|に|が|は|で|と|へ|や|の|も|より|から|まで)/g, '')
+            .replace(/(を|に|が|は|で|と|へ|や|の|も|より|から|まで)$/g, '')
+            .replace(/(する|したした|した|して|される|させる|できる|できた|している|してる)$/g, '')
+            .replace(/(な$|的$|的な$)/g, '')
+            .replace(/(こと|もの|とき|時|場合|様子|状態)$/g, '')
+            .replace(/^(be)/g, '');
+          if (t === before) break;
+        }
+        return t;
       }
 
       function isSimilar(a, b) {
@@ -1572,17 +1844,16 @@
         if (na.length >= 2 && nb.length >= 2) {
           if (na.includes(nb) || nb.includes(na)) return true;
         }
-        // 2文字以上の共通部分が長い場合もOK（簡易）
-        if (na.length >= 3 && nb.length >= 3) {
+        if (na.length >= 2 && nb.length >= 2) {
           const shorter = na.length <= nb.length ? na : nb;
           const longer = na.length > nb.length ? na : nb;
-          if (shorter.length >= 3 && longer.includes(shorter)) return true;
+          if (shorter.length >= 2 && longer.includes(shorter)) return true;
         }
         return false;
       }
 
-      // 候補を集める（登録意味 + 追加の許容意味）
-      let candidates = String(correctAns).split(/[\/・／]/).map(s => s.trim()).filter(Boolean);
+      // 候補を集める（登録意味を「、」「/」で分割 + 追加の許容意味）
+      let candidates = String(correctAns).split(/[\/・／、，,]/).map(s => s.trim()).filter(Boolean);
 
       // 英→日のときは ALT_MEANINGS も候補に加える
       if (direction === 'en2ja') {
@@ -1590,9 +1861,9 @@
         if (ALT_MEANINGS[key]) {
           candidates = candidates.concat(ALT_MEANINGS[key]);
         }
-        // ヒント括弧を除いた形も候補に
+        // ヒント括弧・[ ] を除いた形も候補に
         candidates = candidates.concat(
-          candidates.map(c => c.replace(/[（(].*?[）)]/g, '').trim()).filter(Boolean)
+          candidates.map(c => c.replace(/[（(].*?[）)]/g, '').replace(/\[.*?\]/g, '').trim()).filter(Boolean)
         );
       }
 
@@ -1602,7 +1873,7 @@
       if (!isCorrect) {
         const user = normalize(userAns);
         isCorrect = candidates.some(part => {
-          const core = normalize(part.replace(/[（(].*?[）)]/g, ''));
+          const core = normalize(part.replace(/[（(].*?[）)]/g, '').replace(/\[.*?\]/g, ''));
           return core.length >= 2 && (user.includes(core) || core.includes(user));
         });
       }
@@ -1708,7 +1979,8 @@
     let memoEnabledOnly = false; // 出題ONの単語だけ表示
 
     function getMemoBaseWords() {
-      let list = memoTitleMode === 'weak' ? words.filter(isWeakWord) : words.slice();
+      let list = wordsOfKind(contentKind);
+      if (memoTitleMode === 'weak') list = list.filter(isWeakWord);
       if (memoEnabledOnly) list = list.filter(w => w.enabled !== false);
       return list;
     }
@@ -1727,20 +1999,21 @@
     }
 
     function startMemo() {
-      if (words.length === 0) {
-        alert('単語が登録されていません。');
+      const list = wordsOfKind(contentKind);
+      if (list.length === 0) {
+        alert(kindLabel(contentKind) + 'が登録されていません。');
         return;
       }
       memoTitleMode = 'all';
       memoEnabledOnly = false;
-      memoOrder = words.map(w => w.id);
+      memoOrder = list.map(w => w.id);
       openMemoScreen();
     }
 
     function startWeakMemo() {
-      const weak = words.filter(isWeakWord);
+      const weak = wordsOfKind(contentKind).filter(isWeakWord);
       if (weak.length === 0) {
-        alert('苦手単語はありません。\n（タイピングで正答率60%未満の単語がここに入ります）');
+        alert('苦手な' + kindLabel(contentKind) + 'はありません。\n（タイピングで正答率60%未満のものがここに入ります）');
         return;
       }
       memoTitleMode = 'weak';
@@ -1757,10 +2030,12 @@
       showScreen('memo');
       const titleEl = document.querySelector('#memo .memo-header .title');
       if (titleEl) {
-        const label = memoTitleMode === 'weak' ? '苦手単語' : '単語暗記';
+        const base = kindLabel(contentKind);
+        const label = memoTitleMode === 'weak' ? ('苦手' + (contentKind === 'phrase' ? '表現' : '単語')) : (base + '暗記');
         titleEl.innerHTML = label + ' <span class="badge" id="memoCount">0</span>';
       }
       setMemoFlipSelected(direction === 'ja2en');
+      updateMemoKindUI();
       ['memoSortHigh', 'memoSortLow', 'memoSortNew', 'memoSortOld', 'memoShuffle'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.remove('selected');
@@ -1783,7 +2058,7 @@
 
       container.innerHTML = orderedWords.map(w => {
         const flipped = memoFlipped[w.id];
-        const mainText = flipped ? w.ja : w.en;
+        const mainText = flipped ? w.ja : formatEn(w);
         let accHtml = '';
         if (memoShowAcc) {
           const acc = getAccuracy(w);
