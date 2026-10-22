@@ -701,7 +701,7 @@
         </div>
         <div class="mode-btn full" onclick="startMemo()">
           <div class="icon">📋</div>
-          <div class="label">暗記リスト</div>
+          <div class="label">単語リスト</div>
           <div class="desc">英単語/重要表現を並べてタップ切替</div>
         </div>
       </div>
@@ -746,7 +746,7 @@
     <!-- MEMO / 単語暗記 SCREEN -->
     <div id="memo" class="screen">
       <div class="memo-header">
-        <div class="title">暗記リスト <span class="badge" id="memoCount">0</span></div>
+        <div class="title">単語リスト <span class="badge" id="memoCount">0</span></div>
       </div>
       <div class="direction-toggle" id="memoKindToggle" style="margin-bottom:12px;">
         <button class="active" data-kind="word" onclick="setMemoContentKind('word')">英単語</button>
@@ -759,13 +759,14 @@
         <button class="btn btn-secondary" id="memoFlipJa" onclick="flipAll(true)">全部日本語</button>
       </div>
       <div class="memo-controls" style="margin-bottom:8px;">
+        <button class="btn btn-secondary" id="memoFilterEnabled" onclick="toggleMemoEnabledOnly()">出題単語</button>
         <button class="btn btn-secondary" id="memoSortHigh" onclick="sortMemo('high')">正答率高い順</button>
         <button class="btn btn-secondary" id="memoSortLow" onclick="sortMemo('low')">正答率低い順</button>
-        <button class="btn btn-secondary" id="memoShuffle" onclick="shuffleMemo()">シャッフル</button>
       </div>
       <div class="memo-controls" style="margin-bottom:12px;">
         <button class="btn btn-secondary" id="memoSortNew" onclick="sortMemo('new')">新しい順</button>
         <button class="btn btn-secondary" id="memoSortOld" onclick="sortMemo('old')">古い順</button>
+        <button class="btn btn-secondary" id="memoShuffle" onclick="shuffleMemo()">シャッフル</button>
       </div>
 
       <div class="memo-list" id="memoList"></div>
@@ -1306,6 +1307,11 @@
       document.querySelectorAll('#memoKindToggle button').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.kind === contentKind);
       });
+      const filterBtn = document.getElementById('memoFilterEnabled');
+      if (filterBtn) {
+        filterBtn.textContent = contentKind === 'phrase' ? '出題表現' : '出題単語';
+        filterBtn.classList.toggle('selected', !!memoEnabledOnly);
+      }
     }
 
     function setMemoContentKind(kind) {
@@ -1321,7 +1327,7 @@
       memoOrder.forEach(id => { memoFlipped[id] = (direction === 'ja2en'); });
       const titleEl = document.querySelector('#memo .memo-header .title');
       if (titleEl) {
-        titleEl.innerHTML = kindLabel(contentKind) + '暗記 <span class="badge" id="memoCount">0</span>';
+        titleEl.innerHTML = '単語リスト <span class="badge" id="memoCount">0</span>';
       }
       // sort buttons reset
       ['memoSortHigh', 'memoSortLow', 'memoSortNew', 'memoSortOld', 'memoShuffle'].forEach(id => {
@@ -2030,8 +2036,9 @@
       showScreen('memo');
       const titleEl = document.querySelector('#memo .memo-header .title');
       if (titleEl) {
-        const base = kindLabel(contentKind);
-        const label = memoTitleMode === 'weak' ? ('苦手' + (contentKind === 'phrase' ? '表現' : '単語')) : (base + '暗記');
+        const label = memoTitleMode === 'weak'
+          ? ('苦手' + (contentKind === 'phrase' ? '表現' : '単語'))
+          : '単語リスト';
         titleEl.innerHTML = label + ' <span class="badge" id="memoCount">0</span>';
       }
       setMemoFlipSelected(direction === 'ja2en');
@@ -2111,9 +2118,13 @@
       memoEnabledOnly = !memoEnabledOnly;
       rebuildMemoOrder(true);
       const enBtn = document.getElementById('memoFilterEnabled');
-      if (enBtn) enBtn.classList.toggle('selected', !!memoEnabledOnly);
+      if (enBtn) {
+        enBtn.textContent = contentKind === 'phrase' ? '出題表現' : '出題単語';
+        enBtn.classList.toggle('selected', !!memoEnabledOnly);
+      }
       if (memoOrder.length === 0) {
-        alert(memoEnabledOnly ? '出題ONの単語がありません。' : '表示できる単語がありません。');
+        const name = contentKind === 'phrase' ? '表現' : '単語';
+        alert(memoEnabledOnly ? ('出題ONの' + name + 'がありません。') : ('表示できる' + name + 'がありません。'));
       }
       renderMemoList();
     }
